@@ -11,7 +11,9 @@
  ***********************************************************/
 
 #include "dlio/odom.h"
-
+#include <sys/stat.h>
+#include <fstream>
+#include <iomanip>
 dlio::OdomNode::OdomNode(ros::NodeHandle node_handle) : nh(node_handle) {
 
   this->getParams();
@@ -1869,6 +1871,63 @@ void dlio::OdomNode::debug() {
   double avg_cpu_usage =
     std::accumulate(this->cpu_percents.begin(), this->cpu_percents.end(), 0.0) / this->cpu_percents.size();
 
+
+    class PoseSaver {
+public:
+  PoseSaver() {
+    // Create the 'output' folder if it doesn't exist
+    std::string outputFolderPath = "/home/malik/catkin_ws_Direct_LIO/src/output";
+   int result = mkdir(outputFolderPath.c_str(), 0777);
+
+  if (result != 0) {
+    ROS_ERROR("Error creating the 'output' folder.");
+  } else {
+    ROS_INFO("Successfully created the 'output' folder.");
+  }
+
+    // Open the pose.txt file for writing inside the 'output' folder
+    std::string poseFilePath = outputFolderPath + "/pose.txt";
+    poseFile.open(poseFilePath);
+
+    if (!poseFile.is_open()) {
+    ROS_ERROR("Error opening pose.txt for writing.");
+    return;
+  }
+  
+    // Add a header to the pose file  
+    poseFile << "# timestamp,tx,ty,tz,qx,qy,qz,qw\n";
+  }
+
+  void savePoseData(double timestamp,
+                    double position_x, double position_y, double position_z,
+                    double orientation_x, double orientation_y, double orientation_z, double orientation_w) {
+    // Save pose data to the pose.txt file
+    poseFile << std::fixed << std::setprecision(6) << timestamp << ","
+             << position_x << "," << position_y << "," << position_z << ","
+             << orientation_x << "," << orientation_y << "," << orientation_z << "," << orientation_w << "\n";
+  }
+
+  ~PoseSaver() {
+     // Flush the data to the file
+  poseFile.flush();
+    // Close the file before exiting
+    poseFile.close();
+  }
+
+private:
+  std::ofstream poseFile;
+};
+
+ROS_INFO("Before PoseSaver creation");
+
+  // Save the pose data to a file
+  static PoseSaver poseSaver;
+  poseSaver.savePoseData(this->scan_header_stamp.toSec(),
+                         this->state.p[0], this->state.p[1], this->state.p[2],
+                         this->state.q.x(), this->state.q.y(), this->state.q.z(), this->state.q.w());
+ROS_INFO("After PoseSaver savePoseData");
+
+
   // Print to terminal
   printf("\033[2J\033[1;1H");
 
@@ -1987,4 +2046,6 @@ void dlio::OdomNode::debug() {
 
   std::cout << "+-------------------------------------------------------------------+" << std::endl;
 
+
 }
+
