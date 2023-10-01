@@ -14,6 +14,8 @@
 #include <sys/stat.h>
 #include <fstream>
 #include <iomanip>
+#include <iostream>
+#include <chrono>
 dlio::OdomNode::OdomNode(ros::NodeHandle node_handle) : nh(node_handle) {
 
   this->getParams();
@@ -1895,27 +1897,36 @@ public:
   }
   
     // Add a header to the pose file  
-    poseFile << "# timestamp,tx,ty,tz,qx,qy,qz,qw\n";
+    poseFile << "# timestamp tx ty tz qx qy qz qw\n";
+    // Record the start time
+    start_time = std::chrono::high_resolution_clock::now();
   }
 
   void savePoseData(double timestamp,
                     double position_x, double position_y, double position_z,
                     double orientation_x, double orientation_y, double orientation_z, double orientation_w) {
     // Save pose data to the pose.txt file
-    poseFile << std::fixed << std::setprecision(6) << timestamp << ","
-             << position_x << "," << position_y << "," << position_z << ","
-             << orientation_x << "," << orientation_y << "," << orientation_z << "," << orientation_w << "\n";
+    poseFile << std::fixed << std::setprecision(6) << timestamp << " "
+             << position_x << " " << position_y << " " << position_z << " "
+             << orientation_x << " " << orientation_y << " " << orientation_z << " " << orientation_w << "\n";
   }
 
   ~PoseSaver() {
      // Flush the data to the file
-  poseFile.flush();
+    poseFile.flush();
     // Close the file before exiting
     poseFile.close();
+    // Record the end time
+    end_time = std::chrono::high_resolution_clock::now();
+    ROS_INFO("Processing Time: %ld milliseconds", std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time).count());
+    // Calculate and print the total processing time
+    auto elapsed_time = std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time);
+    std::cout << "Total processing time: " << elapsed_time.count() << " milliseconds" << std::endl;
   }
 
 private:
   std::ofstream poseFile;
+  std::chrono::time_point<std::chrono::high_resolution_clock> start_time, end_time;
 };
 
 ROS_INFO("Before PoseSaver creation");
