@@ -33,12 +33,12 @@ dlio:
 
   extrinsics:
     baselink2imu:
-      t: [ 0., 0., -0.28 ]
-      R: [ 2.67949e-08, -1.,  0.,
-           1.,  2.67949e-08,  0.,
-           0.,  0.,  1. ]
+      t: [0.3, 0.0, 1.6]  # Calculated as the sum of t_lidar_to_center_of_robot and t_imu_to_center_of_robot
+      R: [ 0.96592582628, 0.0, 0.2588190451,
+           0.0, 1.0, 0.0,
+           -0.2588190451, 0.0, 0.96592582628 ]  # 15 degrees clockwise rotation in the Y-axis
     baselink2lidar:
-      t: [ 0.,  0.,  0. ]
-      R: [ 1.,  0.,  0.,
-           0.,  1.,  0.,
-           0.,  0.,  1. ]
+      t: [ 0.2, 0.0, 1.0 ] # Update x, y, z values here
+      R: [ 0.96592582628, 0.0, 0.2588190451,
+           0.0, 1.0, 0.0,
+           -0.2588190451, 0.0, 0.96592582628 ] # 15 degrees pitch down
